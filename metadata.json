@@ -1,0 +1,5 @@
+{
+  "name": "Trình Quản Lý Tệp Tin Cục Bộ",
+  "description": "Một ứng dụng để quản lý siêu dữ liệu cho các tệp cục bộ của bạn, bao gồm đường dẫn, mô tả, ghi chú cài đặt, mật khẩu và thẻ. Ứng dụng này chạy trên trình duyệt của bạn và sử dụng bộ nhớ cục bộ để lưu dữ liệu.",
+  "requestFramePermissions": []
+}
