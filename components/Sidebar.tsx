@@ -1,15 +1,25 @@
 import React from 'react';
-import { TagIcon, FolderIcon } from './icons';
+import { TagIcon, FolderIcon, PlusIcon, UploadIcon, DownloadIcon } from './icons';
 
 interface SidebarProps {
   tags: string[];
-  frequentTags: string[];
   selectedTag: string | null;
   onSelectTag: (tag: string | null) => void;
   fileCount: number;
+  onAddNew: () => void;
+  onImport: () => void;
+  onExport: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ tags, frequentTags, selectedTag, onSelectTag, fileCount }) => {
+const Sidebar: React.FC<SidebarProps> = ({ 
+    tags, 
+    selectedTag, 
+    onSelectTag, 
+    fileCount,
+    onAddNew,
+    onImport,
+    onExport
+}) => {
   return (
     <aside className="w-64 bg-surface text-text-secondary p-6 flex-shrink-0 border-r border-border-color flex flex-col">
       <div className="flex items-center mb-8">
@@ -31,29 +41,33 @@ const Sidebar: React.FC<SidebarProps> = ({ tags, frequentTags, selectedTag, onSe
           <span className="ml-auto inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-600 text-gray-200">{fileCount}</span>
         </a>
 
-        {frequentTags.length > 0 && (
-          <>
-            <h3 className="px-3 pt-4 text-sm font-semibold text-gray-400 uppercase tracking-wider">Thẻ Thường Dùng</h3>
-            <div className="px-3 py-2 flex flex-wrap gap-2">
-              {frequentTags.map(tag => (
-                <button
-                  key={tag}
-                  onClick={() => onSelectTag(tag)}
-                  className={`text-xs font-semibold px-2.5 py-1 rounded-full transition-colors cursor-pointer ${
-                    selectedTag === tag
-                      ? 'bg-primary text-white'
-                      : 'bg-primary/20 text-primary hover:bg-primary/40'
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
+        <div className="pt-2 grid grid-cols-3 gap-2">
+            <button
+                onClick={onAddNew}
+                className="flex items-center justify-center bg-primary hover:bg-indigo-500 text-white font-bold py-2.5 px-3 rounded-lg transition-colors duration-300"
+                title="Thêm Mới"
+            >
+                <PlusIcon className="w-5 h-5" />
+            </button>
+             <button
+                onClick={onImport}
+                className="flex items-center justify-center bg-secondary hover:bg-emerald-500 text-white font-bold py-2.5 px-3 rounded-lg transition-colors duration-300"
+                title="Nhập từ Excel"
+              >
+              <UploadIcon className="w-5 h-5" />
+            </button>
+            <button
+                onClick={onExport}
+                className="flex items-center justify-center bg-gray-600 hover:bg-gray-500 text-white font-bold py-2.5 px-3 rounded-lg transition-colors duration-300"
+                title="Xuất ra Excel"
+              >
+              <DownloadIcon className="w-5 h-5" />
+            </button>
+        </div>
+
+        <h3 className="px-3 pt-4 text-sm font-semibold text-gray-400 uppercase tracking-wider">Thẻ</h3>
         
-        <h3 className="px-3 pt-4 text-sm font-semibold text-gray-400 uppercase tracking-wider">Tất Cả Thẻ</h3>
-        <div className="overflow-y-auto">
+        <div className="overflow-y-auto border-t border-border-color mt-2 pt-2">
         {tags.map(tag => (
           <a
             key={tag}

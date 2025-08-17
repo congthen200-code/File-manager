@@ -4,9 +4,11 @@ import useLocalStorage from './hooks/useLocalStorage';
 import Sidebar from './components/Sidebar';
 import FileList from './components/FileList';
 import FileFormModal from './components/FileFormModal';
-import { PlusIcon, UploadIcon, DownloadIcon } from './components/icons';
+import { SettingsIcon } from './components/icons';
 
 declare var XLSX: any;
+
+type CardSize = 'xxsmall' | 'xsmall' | 'small' | 'medium' | 'large';
 
 const App: React.FC = () => {
   const [files, setFiles] = useLocalStorage<FileEntry[]>('files', []);
@@ -14,26 +16,16 @@ const App: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFile, setEditingFile] = useState<FileEntry | null>(null);
+  const [cardSize, setCardSize] = useLocalStorage<CardSize>('cardSize', 'medium');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const settingsRef = useRef<HTMLDivElement>(null);
+
 
   const allTags = useMemo(() => {
     const tags = new Set<string>();
     files.forEach(file => file.tags.forEach(tag => tags.add(tag)));
     return Array.from(tags).sort();
-  }, [files]);
-
-  const frequentTags = useMemo(() => {
-    const tagCounts = new Map<string, number>();
-    files.forEach(file => {
-        file.tags.forEach(tag => {
-            tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
-        });
-    });
-
-    return Array.from(tagCounts.entries())
-        .sort((a, b) => b[1] - a[1]) // Sort by count descending
-        .slice(0, 5) // Get top 5
-        .map(entry => entry[0]); // Get just the tag name
   }, [files]);
 
   const filteredFiles = useMemo(() => {
@@ -128,22 +120,31 @@ const App: React.FC = () => {
     event.target.value = ''; // Reset input
   };
 
-
+  const handleCardSizeChange = (size: CardSize) => {
+    setCardSize(size);
+    setIsSettingsOpen(false);
+  };
+  
   return (
     <div className="flex h-screen bg-background font-sans">
       <Sidebar
         tags={allTags}
-        frequentTags={frequentTags}
         selectedTag={selectedTag}
         onSelectTag={setSelectedTag}
         fileCount={files.length}
+        onAddNew={openAddNewModal}
+        onImport={handleImportClick}
+        onExport={handleExport}
       />
       <main className="flex-1 p-8 overflow-y-auto">
-        <header className="flex justify-between items-center mb-8 gap-4 flex-wrap">
-          <div className="flex-1 min-w-[200px]">
-            <h1 className="text-3xl font-bold text-text-primary">Trình Quản Lý Tệp</h1>
-            <p className="text-text-secondary mt-1">Quản lý siêu dữ liệu tệp cục bộ của bạn một cách dễ dàng.</p>
-          </div>
+        <header className="flex justify-end items-center mb-8 gap-4 flex-wrap">
+           <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImport}
+              className="hidden"
+              accept=".xlsx, .xls"
+            />
           <div className="flex items-center space-x-2 md:space-x-4">
              <input
                 type="text"
@@ -152,41 +153,32 @@ const App: React.FC = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-48 md:w-72 bg-surface text-text-primary px-4 py-2 rounded-lg border border-border-color focus:ring-2 focus:ring-primary focus:outline-none transition"
               />
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleImport}
-              className="hidden"
-              accept=".xlsx, .xls"
-            />
-            <button
-                onClick={handleImportClick}
-                className="flex items-center bg-secondary hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300"
-                title="Nhập từ Excel"
-              >
-              <UploadIcon className="w-5 h-5 md:mr-2" />
-              <span className="hidden md:inline">Nhập</span>
-            </button>
-            <button
-                onClick={handleExport}
-                className="flex items-center bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300"
-                title="Xuất ra Excel"
-              >
-              <DownloadIcon className="w-5 h-5 md:mr-2" />
-              <span className="hidden md:inline">Xuất</span>
-            </button>
-            <button
-              onClick={openAddNewModal}
-              className="flex items-center bg-primary hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300"
-            >
-              <PlusIcon className="w-5 h-5 mr-2" />
-              Thêm Mới
-            </button>
+            <div className="relative" ref={settingsRef}>
+                <button
+                    onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                    className="flex items-center bg-gray-600 hover:bg-gray-500 text-white font-bold p-2.5 rounded-lg transition-colors duration-300"
+                    title="Cài đặt hiển thị"
+                >
+                    <SettingsIcon className="w-5 h-5" />
+                </button>
+                {isSettingsOpen && (
+                    <div className="absolute right-0 mt-2 w-40 bg-surface rounded-md shadow-lg z-10 border border-border-color">
+                        <div className="p-2">
+                            <p className="text-xs font-semibold text-gray-400 px-2 mb-1">Kích Thước Thẻ</p>
+                            <button onClick={() => handleCardSizeChange('xxsmall')} className={`w-full text-left text-sm px-2 py-1.5 rounded ${cardSize === 'xxsmall' ? 'bg-primary text-white' : 'hover:bg-gray-600'} `}>Siêu nhỏ</button>
+                            <button onClick={() => handleCardSizeChange('xsmall')} className={`w-full text-left text-sm px-2 py-1.5 rounded ${cardSize === 'xsmall' ? 'bg-primary text-white' : 'hover:bg-gray-600'} `}>Rất nhỏ</button>
+                            <button onClick={() => handleCardSizeChange('small')} className={`w-full text-left text-sm px-2 py-1.5 rounded ${cardSize === 'small' ? 'bg-primary text-white' : 'hover:bg-gray-600'} `}>Nhỏ</button>
+                            <button onClick={() => handleCardSizeChange('medium')} className={`w-full text-left text-sm px-2 py-1.5 rounded ${cardSize === 'medium' ? 'bg-primary text-white' : 'hover:bg-gray-600'} `}>Vừa</button>
+                            <button onClick={() => handleCardSizeChange('large')} className={`w-full text-left text-sm px-2 py-1.5 rounded ${cardSize === 'large' ? 'bg-primary text-white' : 'hover:bg-gray-600'} `}>Lớn</button>
+                        </div>
+                    </div>
+                )}
+            </div>
           </div>
         </header>
         
         {filteredFiles.length > 0 ? (
-           <FileList files={filteredFiles} onEdit={handleEditFile} onDelete={handleDeleteFile} onTagClick={setSelectedTag} />
+           <FileList files={filteredFiles} onEdit={handleEditFile} onDelete={handleDeleteFile} onTagClick={setSelectedTag} cardSize={cardSize} />
         ) : (
             <div className="text-center py-20">
                 <p className="text-text-secondary text-lg">Không tìm thấy tệp nào. Thêm tệp mới để bắt đầu!</p>
